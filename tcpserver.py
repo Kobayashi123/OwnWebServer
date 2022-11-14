@@ -33,6 +33,8 @@ class TCPserver:
             server_socket.bind(("localhost", 8080))
             server_socket.listen(10)
 
+            # server_socket.setblocking(False)
+
             print("=== クライアントからの接続を待機します ===")
             (client_socket, client_address) = server_socket.accept()
             print(f"=== クライアントとの接続を確立しました client_address: {client_address} ===")
