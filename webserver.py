@@ -57,10 +57,14 @@ class WebServer:
 			relative_path = path.lstrip("/")
 			static_file_path = os.path.join(self.STATIC_ROOT, relative_path)
 
-			with open(static_file_path, "rb") as aFile:
-				response_body = aFile.read()
+			try:
+				with open(static_file_path, "rb") as aFile:
+					response_body = aFile.read()
+					response_line = "HTTP/1.1 200 OK\r\n"
 
-			response_line = "HTTP/1.1 200 OK\r\n"
+			except FileNotFoundError:
+				response_body = b"<html><body><h1>404 Not Found</h1></body></html>"
+				response_line = "HTTP/1.1 404 Not Found\r\n"
 
 			response_header = ""
 			response_header += f"Date: {datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')}\r\n"
