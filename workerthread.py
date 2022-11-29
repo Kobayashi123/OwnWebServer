@@ -10,11 +10,12 @@ __version__ = '0.0.0'
 __date__ = '2022/11/29 (Created: 2022/11/11)'
 
 import os
+import textwrap
 import traceback
 from datetime import datetime
 from socket import socket
 from threading import Thread
-from typing import Tuple
+from typing import Tuple, Optional
 
 class WorkerThread(Thread):
 	"""
@@ -58,15 +59,35 @@ class WorkerThread(Thread):
 
 			method, path, http_version, request_header, request_body = self.parse_http_request(request)
 
-			try:
-				response_body = self.get_static_file_content(path)
+			response_body: bytes
+			response_type: Optional[str]
+			response_line: str
+
+			if path == "/now":
+				html = f"""\
+						<html>
+						<body>
+							<h1>Now: {datetime.now()}</h1>
+						</body>
+						</html>
+						"""
+				response_body = textwrap.dedent(html).encode()
+				content_type = "text/html"
 				response_line = "HTTP/1.1 200 OK\r\n"
 
-			except FileNotFoundError:
-				response_body = b"<html><body><h1>404 Not Found</h1></body></html>"
-				response_line = "HTTP/1.1 404 Not Found\r\n"
+			else:
+				try:
+					response_body = self.get_static_file_content(path)
+					content_type = None
+					response_line = "HTTP/1.1 200 OK\r\n"
 
-			response_header = self.build_response_header(path, response_body)
+				except FileNotFoundError:
+					traceback.print_exc()
+					response_body = b"<html><body><h1>404 Not Found</h1></body></html>"
+					content_type = "text/html"
+					response_line = "HTTP/1.1 404 Not Found\r\n"
+
+			response_header = self.build_response_header(path, response_body, content_type)
 			response = (response_line + response_header + "\r\n").encode() + response_body
 
 			self.client_socket.send(response)
@@ -107,15 +128,16 @@ class WorkerThread(Thread):
 		with open(static_file_path, "rb") as aFile:
 			return aFile.read()
 
-	def build_response_header(self, path: str, response_body: bytes) -> str:
+	def build_response_header(self, path: str, response_body: bytes, content_type: Optional[str]) -> str:
 		"""
 		レスポンスヘッダーを作成する
 		"""
-		if "." in path:
-			ext = path.rsplit(".", maxsplit=1)[-1]
-		else:
-			ext = ""
-		content_type = self.MIME_TYPES.get(ext, "application/octet-stream")
+		if content_type is None:
+			if "." in path:
+				ext = path.rsplit(".", maxsplit=1)[-1]
+			else:
+				ext = ""
+			content_type = self.MIME_TYPES.get(ext, "application/octet-stream")
 
 		response_header = ""
 		response_header += f"Date: {datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')}\r\n"
