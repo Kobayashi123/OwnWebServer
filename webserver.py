@@ -9,6 +9,7 @@ __author__ = 'Kobayashi Shun'
 __version__ = '0.0.0'
 __date__ = '2022/11/29 (Created: 2022/11/11)'
 
+import os
 import socket
 from datetime import datetime
 
@@ -16,6 +17,9 @@ class WebServer:
 	"""
 	Webサーバーを表すクラス
 	"""
+	BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+	STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
 	def __init__(self):
 		"""
 		コンストラクタ
@@ -45,18 +49,27 @@ class WebServer:
 			with open("server_recv.txt", "wb") as aFile:
 				aFile.write(request)
 
-			response_body = "<html><body><h1>It works!</h1></body></html>"
+			request_line, remain = request.split(b"\r\n", maxsplit=1)
+			request_header, request_body = remain.split(b"\r\n\r\n", maxsplit=1)
+
+			method, path, http_version = request_line.decode().split(" ")
+
+			relative_path = path.lstrip("/")
+			static_file_path = os.path.join(self.STATIC_ROOT, relative_path)
+
+			with open(static_file_path, "rb") as aFile:
+				response_body = aFile.read()
 
 			response_line = "HTTP/1.1 200 OK\r\n"
 
 			response_header = ""
 			response_header += f"Date: {datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')}\r\n"
 			response_header += "Server: Moz Server/0.1\r\n"
-			response_header += f"Content-Length: {len(response_body.encode())}\r\n"
+			response_header += f"Content-Length: {len(response_body)}\r\n"
 			response_header += "Connection: Close\r\n"
 			response_header += "Content-Type: text/html\r\n"
 
-			response = (response_line + response_header + "\r\n" + response_body).encode()
+			response = (response_line + response_header + "\r\n").encode() + response_body
 
 			client_socket.send(response)
 
