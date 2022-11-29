@@ -7,13 +7,14 @@ TCPサーバープログラム：このサーバープログラムにより、TC
 
 __author__ = 'Kobayashi Shun'
 __version__ = '0.0.0'
-__date__ = '2022/11/11 (Created: 2022/11/11)'
+__date__ = '2022/11/29 (Created: 2022/11/11)'
 
 import socket
+from datetime import datetime
 
 class TCPserver:
 	"""
-	TCP通信を行うサーバーを表すクラス
+	Webサーバーを表すクラス
 	"""
 	def __init__(self):
 		"""
@@ -24,7 +25,7 @@ class TCPserver:
 		"""
 		サーバーを起動する
 		"""
-		print("=== TCPサーバーを起動します ===")
+		print("=== サーバーを起動します ===")
 
 		try:
 			server_socket = socket.socket()
@@ -41,18 +42,28 @@ class TCPserver:
 
 			request = client_socket.recv(4096)
 
-			with open("server_recv.txt", "wb") as f:
-				f.write(request)
+			with open("server_recv.txt", "wb") as aFile:
+				aFile.write(request)
 
-			with open("server_send.txt", "rb") as f:
-				response = f.read()
+			response_body = "<html><body><h1>It works!</h1></body></html>"
+
+			response_line = "HTTP/1.1 200 OK\r\n"
+
+			response_header = ""
+			response_header += f"Date: {datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')}\r\n"
+			response_header += "Server: Moz Server/0.1\r\n"
+			response_header += f"Content-Length: {len(response_body.encode())}\r\n"
+			response_header += "Connection: Close\r\n"
+			response_header += "Content-Type: text/html\r\n"
+
+			response = (response_line + response_header + "\r\n" + response_body).encode()
 
 			client_socket.send(response)
 
 			client_socket.close()
 
 		finally:
-			print("=== TCPサーバーを停止します ===")
+			print("=== サーバーを停止します ===")
 
 def main():
 	"""
@@ -64,5 +75,4 @@ def main():
 
 if __name__ == '__main__':  # このスクリプトファイルが直接実行されたときだけ、以下の部分を実行する。
 	import sys
-
 	sys.exit(main())
