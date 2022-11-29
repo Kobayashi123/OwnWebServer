@@ -32,7 +32,7 @@ class TCPclient:
             client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
             print("=== サーバーと接続します ===")
-            client_socket.connect(("localhost", 80))
+            client_socket.connect(("localhost", 8080))
             print("=== サーバーとの接続が完了しました ===")
 
             with open("server_recv.txt", "rb") as f:
