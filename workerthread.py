@@ -7,12 +7,13 @@
 
 __author__ = 'Kobayashi Shun'
 __version__ = '0.0.0'
-__date__ = '2022/11/29 (Created: 2022/11/11)'
+__date__ = '2022/12/2 (Created: 2022/11/11)'
 
 import os
 import re
 import textwrap
 import traceback
+import urllib.parse
 from datetime import datetime
 from pprint import pformat
 from socket import socket
@@ -26,7 +27,7 @@ class WorkerThread(Thread):
 	BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 	STATIC_ROOT = os.path.join(BASE_DIR, "static")
 	MIME_TYPES = {
-		"html": "text/html",
+		"html": "text/html; charset=utf-8",
 		"css": "text/css",
 		"js": "application/javascript",
 		"png": "image/png",
@@ -94,12 +95,30 @@ class WorkerThread(Thread):
 				content_type = "text/html"
 				response_line = "HTTP/1.1 200 OK\r\n"
 
+			elif path == "/parameter" and method == "GET":
+					response_body = b'<html><body><h1>405 Method Not Allowed</h1></body></html>'
+					content_type = "text/html; charset=utf-8"
+					response_line = "HTTP/1.1 405 Method Not Allowed\r\n"
+
+			elif path == "/parameters" and method == "POST":
+				post_params = urllib.parse.parse_qs(request_body.decode())
+				html = f"""\
+				<html>
+				<body>
+					<h1>Parameters: </h1>
+					<pre>{pformat(post_params)}</pre>
+				</body>
+				</html>
+				"""
+				response_body = textwrap.dedent(html).encode()
+				content_type = "text/html; charset=utf-8"
+				response_line = "HTTP/1.1 200 OK\r\n"
+
 			else:
 				try:
 					response_body = self.get_static_file_content(path)
 					content_type = None
 					response_line = "HTTP/1.1 200 OK\r\n"
-
 				except FileNotFoundError:
 					traceback.print_exc()
 					response_body = b"<html><body><h1>404 Not Found</h1></body></html>"
