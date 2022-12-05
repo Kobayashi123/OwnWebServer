@@ -7,196 +7,155 @@
 
 __author__ = 'Kobayashi Shun'
 __version__ = '0.0.0'
-__date__ = '2022/12/2 (Created: 2022/11/11)'
+__date__ = '2022/12/5 (Created: 2022/11/11)'
 
 import os
 import re
-import textwrap
 import traceback
-import urllib.parse
 from datetime import datetime
-from pprint import pformat
 from socket import socket
 from threading import Thread
-from typing import Tuple, Optional
+from typing import Tuple
+
+from moz.http.request import HttpRequest
+from moz.http.response import HttpResponse
+from urls import URL_VIEW
 
 class WorkerThread(Thread):
-	"""
-	Webサーバーを表すクラス
-	"""
-	BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-	STATIC_ROOT = os.path.join(BASE_DIR, "static")
-	MIME_TYPES = {
-		"html": "text/html; charset=utf-8",
-		"css": "text/css",
-		"js": "application/javascript",
-		"png": "image/png",
-		"jpg": "image/jpeg",
-		"gif": "image/gif",
-		"svg": "image/svg+xml",
-		"json": "application/json",
-		"pdf": "application/pdf",
-		"txt": "text/plain",
-		"xml": "text/xml",
-	}
+    """
+    Webサーバーを表すクラス
+    """
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    STATIC_ROOT = os.path.join(BASE_DIR, "static")
+    MIME_TYPES = {
+        "html": "text/html; charset=utf-8",
+        "css": "text/css",
+        "js": "application/javascript",
+        "png": "image/png",
+        "jpg": "image/jpeg",
+        "gif": "image/gif",
+        "svg": "image/svg+xml",
+        "json": "application/json",
+        "pdf": "application/pdf",
+        "txt": "text/plain",
+        "xml": "text/xml",
+        }
+    STATUS_LINES = {
+        200: "200 OK",
+        404: "404 Not Found",
+        405: "405 Method Not Allowed",
+        }
 
-	def __init__(self, client_socket: socket, address: Tuple[str, int]):
-		"""
-		コンストラクタ
-		"""
-		super().__init__()
+    def __init__(self, client_socket: socket, address: Tuple[str, int]):
+        """
+        コンストラクタ
+        """
+        super().__init__()
 
-		self.client_socket = client_socket
-		self.client_address = address
+        self.client_socket = client_socket
+        self.client_address = address
 
-	def run(self) -> None:
-		"""
-		クライアントと接続済みのsocketを引数として受け取り、
-		リクエストを処理してレスポンスを送信する
-		"""
-		try:
-			request = self.client_socket.recv(4096)
+    def run(self) -> None:
+        """
+        クライアントと接続済みのsocketを引数として受け取り、
+        リクエストを処理してレスポンスを送信する
+        """
+        try:
+            request_bytes = self.client_socket.recv(4096)
 
-			with open("server_recv.txt", "wb") as aFile:
-				aFile.write(request)
+            with open("server_recv.txt", "wb") as aFile:
+                aFile.write(request_bytes)
 
-			method, path, http_version, request_header, request_body = self.parse_http_request(request)
+            request = self.parse_http_request(request_bytes)
 
-			response_body: bytes
-			response_type: Optional[str]
-			response_line: str
+            if request.path in URL_VIEW:
+                view = URL_VIEW[request.path]
+                response = view(request)
 
-			if path == "/now":
-				html = f"""\
-						<html>
-						<body>
-							<h1>Now: {datetime.now()}</h1>
-						</body>
-						</html>
-						"""
-				response_body = textwrap.dedent(html).encode()
-				content_type = "text/html"
-				response_line = "HTTP/1.1 200 OK\r\n"
+            else:
+                try:
+                    response_body = self.get_static_file_content(request.path)
+                    content_type = ''
+                    response = HttpResponse(status_code = 200, body = response_body, content_type = content_type)
+                except FileNotFoundError:
+                    traceback.print_exc()
+                    response_body = b"<html><body><h1>404 Not Found</h1></body></html>"
+                    content_type = "text/html"
+                    response = HttpResponse(status_code = 404, body = response_body, content_type = content_type)
 
-			elif path == "/show_request":
-				html = f"""\
-						<html>
-						<body>
-							<h1>Request Line: </h1>
-							<p>{method} {path} {http_version}</p>
-							<h1>Headers: </h1>
-							<pre>{pformat(request_header)}</pre>
-							<h1>Body: </h1>
-							<pre>{request_body.decode("utf-8", "ignore")}</pre>
-						</body>
-						</html>
-						"""
-				response_body = textwrap.dedent(html).encode()
-				content_type = "text/html"
-				response_line = "HTTP/1.1 200 OK\r\n"
+            response_line = self.build_response_line(response)
+            response_header = self.build_response_header(response, request)
+            response_bytes = (response_line + response_header + "\r\n").encode() + response.body
 
-			elif path == "/parameter" and method == "GET":
-					response_body = b'<html><body><h1>405 Method Not Allowed</h1></body></html>'
-					content_type = "text/html; charset=utf-8"
-					response_line = "HTTP/1.1 405 Method Not Allowed\r\n"
+            self.client_socket.send(response_bytes)
 
-			elif path == "/parameters" and method == "POST":
-				post_params = urllib.parse.parse_qs(request_body.decode())
-				html = f"""\
-				<html>
-				<body>
-					<h1>Parameters: </h1>
-					<pre>{pformat(post_params)}</pre>
-				</body>
-				</html>
-				"""
-				response_body = textwrap.dedent(html).encode()
-				content_type = "text/html; charset=utf-8"
-				response_line = "HTTP/1.1 200 OK\r\n"
+        except Exception:
+            print("=== Worker: リクエストの処理中に、エラーが発生しました ===")
+            traceback.print_exc()
 
-			else:
-				try:
-					response_body = self.get_static_file_content(path)
-					content_type = None
-					response_line = "HTTP/1.1 200 OK\r\n"
-				except FileNotFoundError:
-					traceback.print_exc()
-					response_body = b"<html><body><h1>404 Not Found</h1></body></html>"
-					content_type = "text/html"
-					response_line = "HTTP/1.1 404 Not Found\r\n"
+        finally:
+            print(f"=== Worker: クライアントとの通信を終了します client_address: {self.client_address} ===")
+            self.client_socket.close()
 
-			response_header = self.build_response_header(path, response_body, content_type)
-			response = (response_line + response_header + "\r\n").encode() + response_body
+    def parse_http_request(self, request: bytes) -> HttpRequest:
+        """
+        生のHTTPリクエストを、HttpRequestオブジェクトに変換する
+        """
+        request_line, remain = request.split(b"\r\n", maxsplit=1)
+        request_header, request_body = remain.split(b"\r\n\r\n", maxsplit=1)
 
-			self.client_socket.send(response)
+        method, path, http_version = request_line.decode().split(" ")
 
-		except Exception:
-			print("=== Worker: リクエストの処理中に、エラーが発生しました ===")
-			traceback.print_exc()
+        headers = {}
+        for header_row in request_header.decode().split("\r\n"):
+            key, value = re.split(r": *", header_row, maxsplit=1)
+            headers[key] = value
 
-		finally:
-			print(f"=== Worker: クライアントとの通信を終了します client_address: {self.client_address} ===")
-			self.client_socket.close()
+        return HttpRequest(method = method, path = path, http_version = http_version, headers = headers, body = request_body)
 
-	def parse_http_request(self, request: bytes) -> tuple[str, str, str, dict, bytes]:
-		"""
-		HTTPリクエストを
-		1.method: str
-		2.path: str
-		3.http_version: str
-		4.request_header: bytes
-		5.request_body: bytes
-		に分割する
-		"""
-		request_line, remain = request.split(b"\r\n", maxsplit=1)
-		request_header, request_body = remain.split(b"\r\n\r\n", maxsplit=1)
+    def get_static_file_content(self, path: str) -> bytes:
+        """
+        リクエストから、staticファイルの内容を取得する
+        """
+        relative_path = path.lstrip("/")
+        static_file_path = os.path.join(self.STATIC_ROOT, relative_path)
 
-		method, path, http_version = request_line.decode().split(" ")
+        with open(static_file_path, "rb") as aFile:
+            return aFile.read()
 
-		headers = {}
-		for header_row in request_header.decode().split("\r\n"):
-			key, value = re.split(r": *", header_row, maxsplit=1)
-			headers[key] = value
+    def build_response_line(self, response: HttpResponse) -> str:
+        """
+        レスポンスラインを作成する
+        """
+        status_line = self.STATUS_LINES[response.status_code]
+        return f"HTTP/1.1 {status_line}"
 
-		return method, path, http_version, headers, request_body
+    def build_response_header(self, response: HttpResponse, request: HttpRequest) -> str:
+        """
+        レスポンスヘッダーを作成する
+        """
+        if response.content_type == '':
+            if "." in request.path:
+                ext = request.path.rsplit(".", maxsplit=1)[-1]
+            else:
+                ext = ''
+            response.content_type = self.MIME_TYPES.get(ext, "application/octet-stream")
 
-	def get_static_file_content(self, path: str) -> bytes:
-		"""
-		リクエストから、staticファイルの内容を取得する
-		"""
+        response_header = ""
+        response_header += f"Date: {datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')}\r\n"
+        response_header += "Server: Moz Server/0.1\r\n"
+        response_header += f"Content-Length: {len(response.body)}\r\n"
+        response_header += "Connection: Close\r\n"
+        response_header += f"Content-Type: {response.content_type}\r\n"
 
-		relative_path = path.lstrip("/")
-		static_file_path = os.path.join(self.STATIC_ROOT, relative_path)
-
-		with open(static_file_path, "rb") as aFile:
-			return aFile.read()
-
-	def build_response_header(self, path: str, response_body: bytes, content_type: Optional[str]) -> str:
-		"""
-		レスポンスヘッダーを作成する
-		"""
-		if content_type is None:
-			if "." in path:
-				ext = path.rsplit(".", maxsplit=1)[-1]
-			else:
-				ext = ""
-			content_type = self.MIME_TYPES.get(ext, "application/octet-stream")
-
-		response_header = ""
-		response_header += f"Date: {datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')}\r\n"
-		response_header += "Server: Moz Server/0.1\r\n"
-		response_header += f"Content-Length: {len(response_body)}\r\n"
-		response_header += "Connection: Close\r\n"
-		response_header += f"Content-Type: {content_type}\r\n"
-
-		return response_header
+        return response_header
 
 def main():
-	"""
-	Pythonファイルを生成するメイン（main）プログラムです。
-	常に0を応答します。それが結果（リターンコード：終了ステータス）になることを想定しています。
-	"""
+    """
+    Pythonファイルを生成するメイン（main）プログラムです。
+    常に0を応答します。それが結果（リターンコード：終了ステータス）になることを想定しています。
+    """
 
 if __name__ == '__main__':  # このスクリプトファイルが直接実行されたときだけ、以下の部分を実行する。
-	import sys
-	sys.exit(main())
+    import sys
+    sys.exit(main())
