@@ -17,16 +17,15 @@ from socket import socket
 from threading import Thread
 from typing import Tuple
 
+import settings
 from moz.http.request import HttpRequest
 from moz.http.response import HttpResponse
 from urls import URL_VIEW
 
-class WorkerThread(Thread):
+class Worker(Thread):
     """
     Webサーバーを表すクラス
     """
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    STATIC_ROOT = os.path.join(BASE_DIR, "static")
     MIME_TYPES = {
         "html": "text/html; charset=utf-8",
         "css": "text/css",
@@ -117,8 +116,11 @@ class WorkerThread(Thread):
         """
         リクエストから、staticファイルの内容を取得する
         """
+        default_static_root = os.path.join(os.path.dirname(__file__), "../../static")
+        static_root = getattr(settings, "STATIC_ROOT", default_static_root)
+
         relative_path = path.lstrip("/")
-        static_file_path = os.path.join(self.STATIC_ROOT, relative_path)
+        static_file_path = os.path.join(settings.STATIC_ROOT, relative_path)
 
         with open(static_file_path, "rb") as aFile:
             return aFile.read()
