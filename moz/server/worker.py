@@ -15,12 +15,13 @@ import traceback
 from datetime import datetime
 from socket import socket
 from threading import Thread
-from typing import Tuple, Optional
+from typing import Tuple
 
 import settings
 from moz.http.request import HttpRequest
 from moz.http.response import HttpResponse
-from urls import URL_VIEW
+from moz.urls.pattern import UrlPattern
+from urls import url_patterns
 
 class Worker(Thread):
     """
@@ -67,14 +68,11 @@ class Worker(Thread):
 
             request = self.parse_http_request(request_bytes)
 
-            if request.path in URL_VIEW:
-                view = URL_VIEW[request.path]
-                response = view(request)
-
-            for url_pattern, view in URL_VIEW.items():
-                match = self.url_match(url_pattern, request.path)
+            for url_pattern in url_patterns:
+                match = url_pattern.match(request.path)
                 if match:
                     request.params.update(match.groupdict())
+                    view = url_pattern.view
                     response = view(request)
                     break
             else:
@@ -157,20 +155,3 @@ class Worker(Thread):
         response_header += f"Content-Type: {response.content_type}\r\n"
 
         return response_header
-
-    def url_match(self, url_pattern: str, path: str) -> Optional[re.Match]:
-        """
-        URLパターンとパスを受け取り、正規表現でマッチするかどうかを判定する
-        """
-        re_pattern = re.sub(r"<(.+?)>", r"(?P<\1>[^/]+)", url_pattern)
-        return re.match(re_pattern, path)
-
-def main():
-    """
-    Pythonファイルを生成するメイン（main）プログラムです。
-    常に0を応答します。それが結果（リターンコード：終了ステータス）になることを想定しています。
-    """
-
-if __name__ == '__main__':  # このスクリプトファイルが直接実行されたときだけ、以下の部分を実行する。
-    import sys
-    sys.exit(main())
