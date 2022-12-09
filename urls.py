@@ -9,11 +9,11 @@ __author__ = 'Kobayashi Shun'
 __version__ = '0.0.0'
 __date__ = '2022/12/05 (Created: 2022/12/05)'
 
-import veiws
+import views
 
 
 URL_VIEW = {
-    "/now": veiws.now,
-    "/show_request": veiws.show_request,
-    "/parameters": veiws.parameters,
+    "/now": views.now,
+    "/show_request": views.show_request,
+    "/parameters": views.parameters,
     }
