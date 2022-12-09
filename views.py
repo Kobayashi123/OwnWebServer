@@ -7,7 +7,7 @@ Python生成プログラム：Pythonファイルを生成します。
 
 __author__ = 'Kobayashi Shun'
 __version__ = '0.0.0'
-__date__ = '2022/12/05 (Created: 2022/12/03)'
+__date__ = '2022/12/09 (Created: 2022/12/03)'
 
 import textwrap
 import urllib.parse
@@ -81,5 +81,24 @@ def parameters(request: HttpRequest) -> HttpResponse:
         response_body = textwrap.dedent(html).encode()
         content_type = "text/html; charset=utf-8"
         status_code = 200
+
+    return HttpResponse(body=response_body, content_type=content_type, status_code=status_code)
+
+def user_profile(request: HttpRequest) -> HttpResponse:
+    """
+    User ID を表示する
+    """
+    user_id = request.params["user_id"]
+    html = f"""\
+        <html>
+        <body>
+            <h1>プロフィール</h1>
+            <p>ID: {user_id}</p>
+        </body>
+        </html>
+        """
+    response_body = textwrap.dedent(html).encode()
+    content_type = "text/html; charset=utf-8"
+    status_code = 200
 
     return HttpResponse(body=response_body, content_type=content_type, status_code=status_code)

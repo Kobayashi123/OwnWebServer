@@ -15,7 +15,7 @@ import traceback
 from datetime import datetime
 from socket import socket
 from threading import Thread
-from typing import Tuple
+from typing import Tuple, Optional
 
 import settings
 from moz.http.request import HttpRequest
@@ -71,6 +71,12 @@ class Worker(Thread):
                 view = URL_VIEW[request.path]
                 response = view(request)
 
+            for url_pattern, view in URL_VIEW.items():
+                match = self.url_match(url_pattern, request.path)
+                if match:
+                    request.params.update(match.groupdict())
+                    response = view(request)
+                    break
             else:
                 try:
                     response_body = self.get_static_file_content(request.path)
@@ -151,6 +157,13 @@ class Worker(Thread):
         response_header += f"Content-Type: {response.content_type}\r\n"
 
         return response_header
+
+    def url_match(self, url_pattern: str, path: str) -> Optional[re.Match]:
+        """
+        URLパターンとパスを受け取り、正規表現でマッチするかどうかを判定する
+        """
+        re_pattern = re.sub(r"<(.+?)>", r"(?P<\1>[^/]+)", url_pattern)
+        return re.match(re_pattern, path)
 
 def main():
     """
