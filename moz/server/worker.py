@@ -68,13 +68,7 @@ class Worker(Thread):
 
             request = self.parse_http_request(request_bytes)
 
-            for url_pattern in url_patterns:
-                match = url_pattern.match(request.path)
-                if match:
-                    request.params.update(match.groupdict())
-                    view = url_pattern.view
-                    response = view(request)
-                    break
+
             else:
                 try:
                     response_body = self.get_static_file_content(request.path)

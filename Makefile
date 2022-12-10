@@ -12,7 +12,7 @@ INSTDIR	= Example.app/Contents/Resources/Python/
 ARCHIVE	= $(shell basename `pwd`)
 WORKDIR	= ./
 PYLINT	= pylint
-LINTRCF	= pylintrc.txt
+LINTRCF	= .pylintrc
 LINTRST	= pylintresult.txt
 ARGS	=
 TARGZ	= webserver.tar.gz
@@ -60,7 +60,7 @@ unittest:
 
 lint:
 	@if [ ! -e $(LINTRCF) ] ; then $(PYLINT) --generate-rcfile > $(LINTRCF) 2> /dev/null ; fi
-	$(PYLINT) --rcfile=$(LINTRCF) ./$(TARGET) `find ./$(PKGPATH) -name "*.py" -not -name "__init__.py"` > $(LINTRST) ; less $(LINTRST)
+	$(PYLINT) ./$(TARGET) `find ./$(PKGPATH) -name "*.py" -not -name "__init__.py"` > $(LINTRST) ; less $(LINTRST)
 
 #
 # pip is the PyPA recommended tool for installing Python packages.
