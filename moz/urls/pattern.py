@@ -15,6 +15,7 @@ from typing import Callable, Optional
 from moz.http.request import HttpRequest
 from moz.http.response import HttpResponse
 
+
 class UrlPattern:
     """
     URLパターンを処理するクラス

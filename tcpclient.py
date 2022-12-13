@@ -35,15 +35,15 @@ class TCPclient:
             client_socket.connect(("localhost", 8080))
             print("=== サーバーとの接続が完了しました ===")
 
-            with open("server_recv.txt", "rb") as f:
-                request = f.read()
+            with open("server_recv.txt", "rb") as a_file:
+                request = a_file.read()
 
             client_socket.send(request)
 
             response = client_socket.recv(4096)
 
-            with open("client_recv.txt", "wb") as f:
-                f.write(response)
+            with open("client_recv.txt", "wb") as a_file:
+                a_file.write(response)
 
             client_socket.close()
 

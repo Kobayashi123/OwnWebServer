@@ -9,7 +9,6 @@ __author__ = 'Kobayashi Shun'
 __version__ = '0.0.0'
 __date__ = '2022/12/5 (Created: 2022/11/11)'
 
-import os
 import re
 import traceback
 from datetime import datetime
@@ -17,12 +16,9 @@ from socket import socket
 from threading import Thread
 from typing import Tuple
 
-import settings
 from moz.http.request import HttpRequest
 from moz.http.response import HttpResponse
-from moz.urls.pattern import UrlPattern
 from moz.urls.resolver import UrlResolver
-from urls import url_patterns
 
 class Worker(Thread):
     """
@@ -64,25 +60,14 @@ class Worker(Thread):
         try:
             request_bytes = self.client_socket.recv(4096)
 
-            with open("server_recv.txt", "wb") as aFile:
-                aFile.write(request_bytes)
+            with open("server_recv.txt", "wb") as a_file:
+                a_file.write(request_bytes)
 
             request = self.parse_http_request(request_bytes)
 
             view = UrlResolver().resolve(request)
 
-            if view:
-                response = view(request)
-            else:
-                try:
-                    response_body = self.get_static_file_content(request.path)
-                    content_type = ''
-                    response = HttpResponse(status_code = 200, body = response_body, content_type = content_type)
-                except FileNotFoundError:
-                    traceback.print_exc()
-                    response_body = b"<html><body><h1>404 Not Found</h1></body></html>"
-                    content_type = "text/html"
-                    response = HttpResponse(status_code = 404, body = response_body, content_type = content_type)
+            response = view(request)
 
             response_line = self.build_response_line(response)
             response_header = self.build_response_header(response, request)
@@ -113,19 +98,6 @@ class Worker(Thread):
             headers[key] = value
 
         return HttpRequest(method = method, path = path, http_version = http_version, headers = headers, body = request_body)
-
-    def get_static_file_content(self, path: str) -> bytes:
-        """
-        リクエストから、staticファイルの内容を取得する
-        """
-        default_static_root = os.path.join(os.path.dirname(__file__), "../../static")
-        static_root = getattr(settings, "STATIC_ROOT", default_static_root)
-
-        relative_path = path.lstrip("/")
-        static_file_path = os.path.join(settings.STATIC_ROOT, relative_path)
-
-        with open(static_file_path, "rb") as aFile:
-            return aFile.read()
 
     def build_response_line(self, response: HttpResponse) -> str:
         """
