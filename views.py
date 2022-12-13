@@ -7,7 +7,7 @@ Python生成プログラム：Pythonファイルを生成します。
 
 __author__ = 'Kobayashi Shun'
 __version__ = '0.0.0'
-__date__ = '2022/12/09 (Created: 2022/12/03)'
+__date__ = '2022/12/13 (Created: 2022/12/03)'
 
 import textwrap
 import urllib.parse
@@ -20,15 +20,12 @@ from moz.http.response import HttpResponse
 
 def now(request: HttpRequest) -> HttpResponse:
     """
-    現在時刻を取得する
+    現在時刻を取得するHTMLを生成する
     """
-    html = f"""\
-            <html>
-            <body>
-                <h1>Now: {datetime.now()}</h1>
-            </body>
-            </html>
-            """
+    with open("./templates/now.html") as a_file:
+        template = a_file.read()
+        html = template.format(now = datetime.now())
+
     response_body = textwrap.dedent(html).encode()
     content_type = "text/html; charset=utf-8"
 
