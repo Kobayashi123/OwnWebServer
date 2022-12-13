@@ -21,6 +21,7 @@ import settings
 from moz.http.request import HttpRequest
 from moz.http.response import HttpResponse
 from moz.urls.pattern import UrlPattern
+from moz.urls.resolver import UrlResolver
 from urls import url_patterns
 
 class Worker(Thread):
@@ -68,7 +69,10 @@ class Worker(Thread):
 
             request = self.parse_http_request(request_bytes)
 
+            view = UrlResolver().resolve(request)
 
+            if view:
+                response = view(request)
             else:
                 try:
                     response_body = self.get_static_file_content(request.path)
