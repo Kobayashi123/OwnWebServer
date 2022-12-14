@@ -7,7 +7,7 @@
 
 __author__ = 'Kobayashi Shun'
 __version__ = '0.0.0'
-__date__ = '2022/12/5 (Created: 2022/11/11)'
+__date__ = '2022/12/14 (Created: 2022/11/11)'
 
 import re
 import traceback
@@ -71,7 +71,7 @@ class Worker(Thread):
 
             response_line = self.build_response_line(response)
             response_header = self.build_response_header(response, request)
-            response_bytes = (response_line + response_header + "\r\n").encode() + response.body
+            response_bytes = (response_line + response_header + "\r\n").encode() + response.body.encode()
 
             self.client_socket.send(response_bytes)
 

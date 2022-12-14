@@ -27,7 +27,7 @@ def now(request: HttpRequest) -> HttpResponse:
 
     html = render("now.html", context)
 
-    response_body = textwrap.dedent(html).encode()
+    response_body = textwrap.dedent(html)
     content_type = "text/html; charset=utf-8"
 
     return HttpResponse(body=response_body, content_type=content_type, status_code=200)
