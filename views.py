@@ -25,7 +25,7 @@ def now(request: HttpRequest) -> HttpResponse:
     """
     context = {"now": datetime.now()}
 
-    html = render("./templates/now.html", context)
+    html = render("now.html", context)
 
     response_body = textwrap.dedent(html).encode()
     content_type = "text/html; charset=utf-8"
