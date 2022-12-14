@@ -24,13 +24,11 @@ def now(request: HttpRequest) -> HttpResponse:
     現在時刻を取得するHTMLを生成する
     """
     context = {"now": datetime.now()}
-
     html = render("now.html", context)
 
     response_body = textwrap.dedent(html)
-    content_type = "text/html; charset=utf-8"
 
-    return HttpResponse(body=response_body, content_type=content_type, status_code=200)
+    return HttpResponse(body=response_body)
 
 def show_request(request: HttpRequest) -> HttpResponse:
     """
