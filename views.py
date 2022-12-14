@@ -16,15 +16,16 @@ from pprint import pformat
 
 from moz.http.request import HttpRequest
 from moz.http.response import HttpResponse
+from moz.templates.renderer import render
 
 
 def now(request: HttpRequest) -> HttpResponse:
     """
     現在時刻を取得するHTMLを生成する
     """
-    with open("./templates/now.html") as a_file:
-        template = a_file.read()
-        html = template.format(now = datetime.now())
+    context = {"now": datetime.now()}
+
+    html = render("./templates/now.html", context)
 
     response_body = textwrap.dedent(html).encode()
     content_type = "text/html; charset=utf-8"
