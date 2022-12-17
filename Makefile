@@ -1,11 +1,10 @@
 PYTHON	= python
 PYDOC	= pydoc
-PRODUCT = ${ARGS}.py
 PYCS	= $(shell find . -name "*.pyc")
 PYCACHE	= $(shell find . -name "__pycache__")
 MODULE	= example
 TARGET	= $(MODULE).py
-PACKAGE	= .
+PACKAGE	= moz
 PKGPATH	= $(shell echo $(PACKAGE) | sed -e 's/\./\//g')
 PKGTDIR	= $(shell echo $(PACKAGE) | cut -d '.' -f1)
 INSTDIR	= Example.app/Contents/Resources/Python/
@@ -14,7 +13,7 @@ WORKDIR	= ./
 PYLINT	= pylint
 LINTRCF	= .pylintrc
 LINTRST	= pylintresult.txt
-ARGS	=
+ARGS =
 TARGZ	= webserver.tar.gz
 ARVER	= $(shell basename $(TARGZ) .tar.gz)
 
@@ -26,7 +25,6 @@ wipe: clean
 	(cd ../ ; rm -f ./$(ARCHIVE).zip)
 
 clean:
-	@for each in ${PRODUCT} ; do echo "rm -f $${each}" ; rm -f $${each} ; done
 	@for each in ${PYCS} ; do echo "rm -f $${each}" ; rm -f $${each} ; done
 	@for each in ${PYCACHE} ; do echo "rm -f $${each}" ; rm -rf $${each} ; done
 	@if [ -e $(INSTDIR) ] ; then echo "rm -f -r $(INSTDIR)" ; rm -f -r $(INSTDIR) ; fi
@@ -35,7 +33,7 @@ clean:
 	@find . -name ".DS_Store" -exec rm {} ";" -exec echo rm -f {} ";"
 
 run: all
-	$(PYTHON) $(TARGET) ${ARGS}
+	$(PYTHON) $(TARGET) $(ARGS)
 
 install: all
 	@if [ ! -e $(INSTDIR) ] ; then echo "mkdir $(INSTDIR)" ; mkdir $(INSTDIR) ; fi

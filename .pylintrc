@@ -146,6 +146,15 @@ confidence=HIGH,
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
+# Modified_by_Moz
+# disable=raw-checker-failed,
+#         bad-inline-option,
+#         locally-disabled,
+#         file-ignored,
+#         suppressed-message,
+#         useless-suppression,
+#         deprecated-pragma,
+#         use-symbolic-message-instead
 disable=raw-checker-failed,
         bad-inline-option,
         locally-disabled,
@@ -154,6 +163,10 @@ disable=raw-checker-failed,
         useless-suppression,
         deprecated-pragma,
         use-symbolic-message-instead
+        invalid-name,
+        deprecated-module,
+        unnecessary-direct-lambda-call
+
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -336,7 +349,9 @@ indent-after-paren=4
 indent-string='    '
 
 # Maximum number of characters on a single line.
-max-line-length=100
+# Modified_by_Moz
+# max-line-length=100
+max-line-length=128
 
 # Maximum number of lines in a module.
 max-module-lines=1000
@@ -444,7 +459,9 @@ ignored-parents=
 max-args=5
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=7
+# Modified_by_Moz
+# max-attributes=7
+max-attributes=15
 
 # Maximum number of boolean expressions in an if statement (see R0916).
 max-bool-expr=5
@@ -556,12 +573,29 @@ function-naming-style=snake_case
 #function-rgx=
 
 # Good variable names which should always be accepted, separated by a comma.
+# Modified_by_Moz
+# good-names=i,
+#            j,
+#            k,
+#            ex,
+#            Run,
+#            _
 good-names=i,
            j,
            k,
            ex,
            Run,
-           _
+           _,
+           d,
+           h,
+           m,
+           n,
+           u,
+           v,
+           w,
+           x,
+           y,
+           z
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted
