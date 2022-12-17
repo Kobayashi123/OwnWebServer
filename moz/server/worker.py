@@ -7,7 +7,7 @@
 
 __author__ = 'Kobayashi Shun'
 __version__ = '0.0.0'
-__date__ = '2022/12/14 (Created: 2022/11/11)'
+__date__ = '2022/12/18 (Created: 2022/11/11)'
 
 import re
 import traceback
@@ -123,5 +123,7 @@ class Worker(Thread):
         response_header += f"Content-Length: {len(response.body)}\r\n"
         response_header += "Connection: Close\r\n"
         response_header += f"Content-Type: {response.content_type}\r\n"
+        for header_name, header_value in response.headers.items():
+            response_header += f"{header_name}: {header_value}\r\n"
 
         return response_header

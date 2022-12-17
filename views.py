@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 """
-Python生成プログラム：Pythonファイルを生成します。
+動的ページ生成プログラム：動的にHTMLファイルを生成します。
 """
 
 __author__ = 'Kobayashi Shun'
 __version__ = '0.0.0'
-__date__ = '2022/12/16 (Created: 2022/12/03)'
+__date__ = '2022/12/18 (Created: 2022/12/03)'
 
 import urllib.parse
 from datetime import datetime
@@ -64,3 +64,6 @@ def user_profile(request: HttpRequest) -> HttpResponse:
     html = render("user_profile.html", content)
 
     return HttpResponse(body=html)
+
+def set_cookie(request: HttpRequest) -> HttpResponse:
+    return HttpResponse(headers={"Set-Cookie": "username=TARO"})

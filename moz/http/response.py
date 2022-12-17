@@ -7,10 +7,9 @@ Responseプログラム：レスポンス情報を格納します。
 
 __author__ = 'Kobayashi Shun'
 __version__ = '0.0.0'
-__date__ = '2022/12/05 (Created: 2022/12/05)'
+__date__ = '2022/12/18 (Created: 2022/12/05)'
 
 from typing import Optional
-
 
 class HttpResponse:
     """
@@ -18,9 +17,11 @@ class HttpResponse:
     """
     status_code: int
     content_type: Optional[str]
+    headers: dict
     body: str
 
-    def __init__(self, status_code: int = 200, content_type: str = '', body: str = '') -> None:
+    def __init__(self, status_code: int = 200, content_type: str = '', headers: dict = {}, body: str = '') -> None:
         self.status_code = status_code
         self.content_type = content_type
+        self.headers = headers
         self.body = body

@@ -21,7 +21,11 @@ class UrlPattern:
     URLパターンを処理するクラス
     """
     pattern: str
+
     def __init__(self, pattern: str, view: Callable[[HttpRequest], HttpResponse]):
+        """
+        コンストラクタ
+        """
         self.pattern = pattern
         self.view = view
 
