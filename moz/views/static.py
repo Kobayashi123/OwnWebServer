@@ -7,7 +7,7 @@ Python生成プログラム：Pythonファイルを生成します。
 
 __author__ = 'Kobayashi Shun'
 __version__ = '0.0.0'
-__date__ = '2022/12/13 (Created: 2022/12/13)'
+__date__ = '2022/12/23 (Created: 2022/12/13)'
 
 import os
 import traceback
@@ -29,10 +29,10 @@ def static(request: HttpRequest) -> HttpResponse:
         with open(static_file_path, "rb") as a_file:
             response_body = a_file.read()
 
-        return HttpResponse(body = response_body.decode())
+        return HttpResponse(body = response_body)
 
     except FileNotFoundError:
         traceback.print_exc()
-        response_body = "<html><body><h1>404 Not Found</h1></body></html>"
+        response_body = b"<html><body><h1>404 Not Found</h1></body></html>"
         content_type = "text/html"
         return HttpResponse(status_code = 404, body = response_body, content_type = content_type)
