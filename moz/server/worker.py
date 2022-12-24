@@ -39,6 +39,7 @@ class Worker(Thread):
         }
     STATUS_LINES = {
         200: "200 OK",
+        302: "302 Found",
         404: "404 Not Found",
         405: "405 Method Not Allowed",
         }
@@ -71,6 +72,8 @@ class Worker(Thread):
 
             response_line = self.build_response_line(response)
             response_header = self.build_response_header(response, request)
+            if type(response.body) == str:
+                response.body = response.body.encode()
             response_bytes = (response_line + response_header + "\r\n").encode() + response.body
 
             self.client_socket.send(response_bytes)

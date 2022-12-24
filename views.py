@@ -66,4 +66,44 @@ def user_profile(request: HttpRequest) -> HttpResponse:
     return HttpResponse(body=html)
 
 def set_cookie(request: HttpRequest) -> HttpResponse:
+    """
+    Cookieを設定する
+    """
     return HttpResponse(headers={"Set-Cookie": "username=TARO"})
+
+def login(request: HttpRequest) -> HttpResponse:
+    """
+    ログインページを表示する
+    """
+    if request.method == "GET":
+        html = render("login.html", {})
+        return HttpResponse(body = html)
+    else:
+        post_params = urllib.parse.parse_qs(request.body.decode())
+        username = post_params["username"][0]
+
+        headers = {"Location": "/welcome", "Set-Cookie": f"username={username}"}
+        return HttpResponse(status_code=302, headers=headers)
+
+def welcome(request: HttpRequest) -> HttpResponse:
+    """
+    Welcomeページを表示する
+    """
+    cookie_header = request.headers.get("Cookie", None)
+
+    if not cookie_header:
+        return HttpResponse(status_code = 302, headers = {"Location": "/login"})
+
+    cookie_strings = cookie_header.split("; ")
+
+    cookies = {}
+    for cookie_string in cookie_strings:
+        key, value = cookie_string.split("=")
+        cookies[key] = value
+
+    if "username" not in cookies:
+        return HttpResponse(status_code = 302, headers = {"Location": "/login"})
+
+    html = render("welcome.html", context = {"username": cookies["username"]})
+
+    return HttpResponse(body = html)
