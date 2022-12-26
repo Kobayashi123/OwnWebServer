@@ -25,7 +25,7 @@ def now(request: HttpRequest) -> HttpResponse:
     context = {"now": datetime.now()}
     html = render("now.html", context)
 
-    return HttpResponse(body=html)
+    return HttpResponse(body=html.encode())
 
 def show_request(request: HttpRequest) -> HttpResponse:
     """
@@ -37,24 +37,24 @@ def show_request(request: HttpRequest) -> HttpResponse:
                }
     html = render("show_request.html", content)
 
-    return HttpResponse(body=html)
+    return HttpResponse(body=html.encode())
 
 def parameters(request: HttpRequest) -> HttpResponse:
     """
     POSTパラメータ を表示する
     """
-    response_body = ''
+    html = ''
 
     if request.method == "GET":
-        response_body = "<html><body><h1>405 Method Not Allowed</h1></body></html>"
+        response_body = b"<html><body><h1>405 Method Not Allowed</h1></body></html>"
         return HttpResponse(body = response_body, status_code = 405)
 
     if request.method == "POST":
         content = {"params": urllib.parse.parse_qs(request.body.decode())}
-        response_body = render("parameter.html", content)
-        return HttpResponse(body = response_body)
+        html = render("parameter.html", content)
+        return HttpResponse(body = html.encode())
 
-    return HttpResponse(body = response_body)
+    return HttpResponse(body = html.encode())
 
 def user_profile(request: HttpRequest) -> HttpResponse:
     """
@@ -63,7 +63,7 @@ def user_profile(request: HttpRequest) -> HttpResponse:
     content = {"user_id": request.params["user_id"]}
     html = render("user_profile.html", content)
 
-    return HttpResponse(body=html)
+    return HttpResponse(body=html.encode())
 
 def set_cookie(request: HttpRequest) -> HttpResponse:
     """
@@ -77,33 +77,25 @@ def login(request: HttpRequest) -> HttpResponse:
     """
     if request.method == "GET":
         html = render("login.html", {})
-        return HttpResponse(body = html)
+        return HttpResponse(body = html.encode())
     else:
         post_params = urllib.parse.parse_qs(request.body.decode())
         username = post_params["username"][0]
+        email = post_params["email"][0]
 
-        headers = {"Location": "/welcome", "Set-Cookie": f"username={username}"}
-        return HttpResponse(status_code=302, headers=headers)
+        headers = {"Location": "/welcome"}
+        return HttpResponse(status_code=302, headers=headers, cookies={"username": username, "email": email})
 
 def welcome(request: HttpRequest) -> HttpResponse:
     """
     Welcomeページを表示する
     """
-    cookie_header = request.headers.get("Cookie", None)
 
-    if not cookie_header:
+    if "username" not in request.cookies:
         return HttpResponse(status_code = 302, headers = {"Location": "/login"})
 
-    cookie_strings = cookie_header.split("; ")
+    username = request.cookies["username"]
+    email = request.cookies["email"]
+    html = render("welcome.html", context = {"username": username, "email": email})
 
-    cookies = {}
-    for cookie_string in cookie_strings:
-        key, value = cookie_string.split("=")
-        cookies[key] = value
-
-    if "username" not in cookies:
-        return HttpResponse(status_code = 302, headers = {"Location": "/login"})
-
-    html = render("welcome.html", context = {"username": cookies["username"]})
-
-    return HttpResponse(body = html)
+    return HttpResponse(body = html.encode())

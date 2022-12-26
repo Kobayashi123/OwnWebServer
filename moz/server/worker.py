@@ -7,7 +7,7 @@
 
 __author__ = 'Kobayashi Shun'
 __version__ = '0.0.0'
-__date__ = '2022/12/23 (Created: 2022/11/11)'
+__date__ = '2022/12/24 (Created: 2022/11/11)'
 
 import re
 import traceback
@@ -100,7 +100,15 @@ class Worker(Thread):
             key, value = re.split(r": *", header_row, maxsplit=1)
             headers[key] = value
 
-        return HttpRequest(method = method, path = path, http_version = http_version, headers = headers, body = request_body)
+        cookies = {}
+        if "Cookie" in headers:
+            cookie_strings = headers["Cookie"].split("; ")
+
+            for cookie_string in cookie_strings:
+                key, value = cookie_string.split("=")
+                cookies[key] = value
+
+        return HttpRequest(method = method, path = path, http_version = http_version, headers = headers, cookies = cookies, body = request_body)
 
     def build_response_line(self, response: HttpResponse) -> str:
         """
@@ -128,5 +136,7 @@ class Worker(Thread):
         response_header += f"Content-Type: {response.content_type}\r\n"
         for header_name, header_value in response.headers.items():
             response_header += f"{header_name}: {header_value}\r\n"
+        for cookie_name, cookie_value in response.cookies.items():
+            response_header += f"Set-Cookie: {cookie_name}={cookie_value}\r\n"
 
         return response_header
