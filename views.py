@@ -7,7 +7,7 @@
 
 __author__ = 'Kobayashi Shun'
 __version__ = '0.0.0'
-__date__ = '2022/12/18 (Created: 2022/12/03)'
+__date__ = '2022/12/26 (Created: 2022/12/03)'
 
 import urllib.parse
 from datetime import datetime
@@ -15,6 +15,7 @@ from pprint import pformat
 
 from moz.http.request import HttpRequest
 from moz.http.response import HttpResponse
+from moz.http.cookie import Cookie
 from moz.templates.renderer import render
 
 
@@ -84,7 +85,11 @@ def login(request: HttpRequest) -> HttpResponse:
         email = post_params["email"][0]
 
         headers = {"Location": "/welcome"}
-        return HttpResponse(status_code=302, headers=headers, cookies={"username": username, "email": email})
+        cookies = [
+            Cookie(name="username", value=username, max_age=30),
+            Cookie(name="email", value=email, max_age=30),
+        ]
+        return HttpResponse(status_code=302, headers=headers, cookies=cookies)
 
 def welcome(request: HttpRequest) -> HttpResponse:
     """

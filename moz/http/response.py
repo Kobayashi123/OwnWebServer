@@ -7,9 +7,11 @@ Responseプログラム：レスポンス情報を格納します。
 
 __author__ = 'Kobayashi Shun'
 __version__ = '0.0.0'
-__date__ = '2022/12/24 (Created: 2022/12/05)'
+__date__ = '2022/12/26 (Created: 2022/12/05)'
 
-from typing import Optional, Union
+from typing import Optional, Union, List
+
+from moz.http.cookie import Cookie
 
 class HttpResponse:
     """
@@ -17,11 +19,11 @@ class HttpResponse:
     """
     status_code: int
     headers: dict
-    cookies: dict
+    cookies: List[Cookie]
     content_type: Optional[str]
     body: Union[bytes, str]
 
-    def __init__(self, status_code: int = 200, headers: dict = {}, cookies: dict = {}, content_type: str = '', body: Union[bytes, str] = b''):
+    def __init__(self, status_code: int = 200, headers: dict = {}, cookies: List[Cookie] = [], content_type: str = '', body: Union[bytes, str] = b''):
         """
         HttpResponseクラスのコンストラクタです。
 
